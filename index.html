@@ -1,23 +1,239 @@
-<!doctype html>
-<html class="no-js" lang="">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title></title>
-    <meta name="description" content="">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="css/smartWeather.css">
-</head>
-<body>
-<div id="weather" class="item weather">
-</div>
+<!DOCTYPE html>
+<html>
 
-<script src="js/jquery-2.1.4.min.js"></script>
-<script src="js/smartWeather.js"></script>
-<script>
-    $(function () {
-        $('#weather').smartWeather();
-    })
-</script>
-</body>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>OA-食药移动平台</title>
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="css/app.css" />
+		<script src="js/jquery-2.1.4.min.js"></script>
+		<script src="js/mui.min.js"></script>
+		<script src="js/base.js"></script>
+		<script type="text/javascript">
+			//判断是否登陆
+			mui.plusReady(function() {
+				//仅支持竖屏显示
+				plus.screen.lockOrientation("portrait-primary");
+				if (!LOGIN) {
+					clicked('subPages/login.html', null, null, {});
+				}
+				//处理逻辑：1秒内，连续两次按返回键，则退出应用；
+				var first = null;
+				mui.back = function() {
+					//首次按键，提示‘再按一次退出应用’
+					if (!first) {
+						first = new Date().getTime();
+						mui.toast('再按一次退出应用');
+						setTimeout(function() {
+							first = null;
+						}, 1000);
+					} else {
+						if (new Date().getTime() - first < 1000) {
+							plus.runtime.quit();
+						}
+					}
+				};
+			});
+		</script>
+		<style type="text/css">
+			#quickStart span {
+				position: absolute;
+				left: 50%;
+				top: 50%;
+				margin-top: -20px;
+				margin-left: -20px;
+				border-radius: 50%;
+				width: 40px;
+				height: 40px;
+				color: #fff;
+				background-color: #007aff;
+			}
+
+			.mui-icon-plusempty {
+				-webkit-transition: -webkit-transform 0.2s;
+			}
+
+			#quickStart .animate.mui-icon-plusempty {
+				transform: rotate(45deg);
+				-webkit-transform: rotate(45deg);
+				background-color: #cf2d28!important;
+				/* Safari and Chrome */
+			}
+
+			.mui-icon-plusempty:before {
+				font-size: 40px;
+				display: block;
+				top: 0;
+				position: absolute;
+			}
+
+			#quickStart {
+				display: table-cell;
+				overflow: hidden;
+				width: 1%;
+				height: 50px;
+				text-align: center;
+				vertical-align: middle;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+				color: #929292;
+				position: relative;
+			}
+
+			#quickStart span {
+				font-family: Muiicons;
+				font-size: 24px;
+				font-weight: 400;
+				font-style: normal;
+				line-height: 1;
+				display: inline-block;
+				text-decoration: none;
+				-webkit-font-smoothing: antialiased;
+			}
+
+			#quickStart span:active {
+				opacity: 1;
+			}
+		</style>
+	</head>
+
+	<body>
+		<!--<div class="loader mui-loadings">
+			<div class="loader-inner semi-circle-spin">
+				<div></div>
+			</div>
+		</div>-->
+		<nav class="mui-bar mui-bar-tab">
+			<a id="defaultTab" class="mui-tab-item mui-active" href="subPages/main.html">
+				<span class="mui-icon mui-icon-home1"></span>
+				<span class="mui-tab-label">首页</span>
+			</a>
+			<a class="mui-tab-item" href="subPages/notification/notification.html">
+				<span class="mui-icon mui-icon-notify"></span>
+				<span class="mui-tab-label">通知</span>
+			</a>
+			<div id="quickStart">
+				<span class="mui-icon mui-icon-plusempty"></span>
+			</div>
+			<a class="mui-tab-item" href="subPages/backlog/backlog.html">
+				<span class="mui-icon mui-icon-backlog"></span>
+				<span class="mui-tab-label">待办</span>
+			</a>
+			<a class="mui-tab-item" href="subPages/setting.html">
+				<span class="mui-icon mui-icon-setting1"></span>
+				<span class="mui-tab-label">设置</span>
+			</a>
+		</nav>
+	</body>
+	<script type="text/javascript">
+		var subpages = ['subPages/main.html', 'subPages/notification/notification.html', 'subPages/backlog/backlog.html', 'subPages/setting.html'];
+
+		function initPages() {
+			var subpage_style = {
+				top: '0',
+				bottom: '51px'
+			};
+			var aniShow = {};
+			var self = plus.webview.currentWebview();
+			for (var i = 0; i < 5; i++) {
+				var temp = {};
+				var sub = plus.webview.create(subpages[i], subpages[i], subpage_style);
+				if (i > 0) {
+					sub.hide();
+				} else {
+					temp[subpages[i]] = "true";
+					mui.extend(aniShow, temp);
+				}
+				self.append(sub);
+				$('.mui-loadings').hide();
+			}
+			var last = plus.webview.create('subPages/approval.html', 'subPages/approval.html', {
+				scrollIndicator: 'none',
+				scalable: false,
+				top: 0,
+				bottom: '50px',
+				popGesture: 'none'
+			}, {
+				preate: true
+			});
+			$('#quickStart .mui-icon-plusempty')[0].addEventListener('tap', function() {
+				$(this).toggleClass('animate');
+				if ($(this).hasClass('animate')) {
+					last.evalJS("animateClass()");
+					last.show('zoom-fade-out');
+					$('.mui-bar').css({
+						'background-color': '#fff'
+					});
+					$('.mui-bar a').css({
+						'display': 'none'
+					});
+				} else {
+					last.evalJS("removeClass()");
+					$('.mui-bar').css({
+						'background-color': ''
+					});
+					$('.mui-bar a').css({
+						'display': ''
+					});
+					last.hide();
+				}
+			});
+		}
+		//创建子页面，首个选项卡页面显示，其它均隐藏；
+		function cleanPages() {
+			var subPages = plus.webview.getLaunchWebview().children();
+			for (var i = 0; i < subPages.length; i++) {
+				subPages[i].close();
+			}
+			clicked('subPages/login.html');
+		}
+		/*登陆后，执行预加载页面*/
+		function logInit() {
+			mui.plusReady(function() {
+				initPages();
+				//当前激活选项
+				var activeTab = subpages[0];
+				//选项卡点击事件
+				mui('.mui-bar-tab').on('tap', 'a', function(e) {
+					var targetTab = this.getAttribute('href');
+					if (targetTab == activeTab) {
+						return;
+					}
+					//显示目标选项卡
+					//若为iOS平台或非首次显示，则直接显示
+					if (mui.os.ios) {
+						plus.webview.show(targetTab);
+					} else {
+						//否则，使用fade-in动画，且保存变量
+						var temp = {};
+						temp[targetTab] = "true";
+						//						mui.extend(aniShow, temp);
+						plus.webview.show(targetTab, "slide-in-right", 300);
+					}
+					//隐藏当前;
+					plus.webview.hide(activeTab);
+					//更改当前活跃的选项卡
+					activeTab = targetTab;
+				});
+				//自定义事件，模拟点击“首页选项卡”
+				document.addEventListener('gohome', function() {
+					var defaultTab = document.getElementById("defaultTab");
+					//模拟首页点击
+					mui.trigger(defaultTab, 'tap');
+					//切换选项卡高亮
+					var current = document.querySelector(".mui-bar-tab>.mui-tab-item.mui-active");
+					if (defaultTab !== current) {
+						current.classList.remove('mui-active');
+						defaultTab.classList.add('mui-active');
+					}
+				});
+				var main = plus.webview.getWebviewById("subPages/main.html");
+				main.evalJS('mainLoad()');
+				plus.nativeUI.toast('登录成功！');
+				plus.webview.getWebviewById('subPages/login.html').close();
+			});
+		}
+	</script>
+
 </html>
